@@ -40,7 +40,7 @@ Kết quả nên thấy 3 containers đang chạy:
 - **Frontend:** http://localhost:5173
 - **Login:** http://localhost:5173/login
   - Email: `admin@coticket.com`
-  - Password: `Admin@123456`
+  - Password: Lien he: pvminh1024@gmail.com 
 
 ## 📝 Các Lệnh Cơ Bản
 
