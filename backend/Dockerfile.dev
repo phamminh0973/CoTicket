@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm install
+
+# Copy tsconfig
+COPY tsconfig.json ./
+
+# Source code will be mounted as volume
+# No need to copy src here
+
+# Create uploads directory
+RUN mkdir -p uploads
+
+EXPOSE 5000
+
+# Dev command with ts-node-dev for hot reload
+CMD ["npm", "run", "dev"]
