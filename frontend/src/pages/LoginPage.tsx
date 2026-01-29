@@ -83,6 +83,18 @@ const LoginPage: React.FC = () => {
         </Form>
 
         <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <Text type="secondary">Bạn không phải là admin?</Text>
+          <br />
+          <Button 
+            type="link" 
+            onClick={() => navigate('/')}
+            style={{ padding: 0, marginTop: 8 }}
+          >
+            Quay về trang chủ
+          </Button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
             Tài khoản admin được tạo sẵn. Không hỗ trợ đăng ký.
           </Text>

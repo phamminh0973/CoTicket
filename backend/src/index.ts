@@ -18,9 +18,24 @@ const app: Application = express();
  */
 
 // CORS - cho phép frontend gọi API
+const allowedOrigins = [
+  'http://localhost:5173', // Local dev
+  'https://coticket-frontend.onrender.com', // Production
+  process.env.FRONTEND_URL, // Custom domain
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: (origin, callback) => {
+      // Cho phép requests không có origin (mobile apps, curl, postman)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
