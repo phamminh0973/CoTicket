@@ -1,23 +1,14 @@
-import nodemailer from 'nodemailer';
+import * as brevo from '@getbrevo/brevo';
 import { config } from '../config';
 
 /**
  * Email Service
- * Sử dụng Nodemailer với SMTP
+ * Sử dụng Brevo API (HTTPS) thay vì SMTP để tránh bị block trên Render free tier
  */
 
-// Tạo transporter
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: config.email.host,
-    port: config.email.port,
-    secure: config.email.secure,
-    auth: {
-      user: config.email.user,
-      pass: config.email.pass,
-    },
-  });
-};
+// Initialize Brevo API client
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '');
 
 export interface SendEmailOptions {
   to: string;
@@ -27,7 +18,7 @@ export interface SendEmailOptions {
 }
 
 /**
- * Gửi email
+ * Gửi email qua Brevo API
  */
 export const sendEmail = async (options: SendEmailOptions): Promise<void> => {
   try {
@@ -41,35 +32,27 @@ export const sendEmail = async (options: SendEmailOptions): Promise<void> => {
       throw new Error('Email không được để trống');
     }
 
-    const transporter = createTransporter();
+    // Gửi email qua Brevo API
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { email: config.email.from.split('<')[1]?.replace('>', '').trim() || config.email.user };
+    sendSmtpEmail.to = [{ email: options.to }];
+    sendSmtpEmail.subject = options.subject;
+    sendSmtpEmail.htmlContent = options.html;
+    if (options.text) {
+      sendSmtpEmail.textContent = options.text;
+    }
 
-    const mailOptions = {
-      from: config.email.from,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text || '',
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent:', info.messageId);
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Email sent via Brevo API:', result.body.messageId);
   } catch (error: any) {
-    console.error('Error sending email:', error);
+    console.error('Error sending email via Brevo API:', error);
     
-    // Xử lý các loại lỗi cụ thể
-    if (error.code === 'EAUTH') {
-      throw new Error('Lỗi xác thực SMTP. Vui lòng kiểm tra thông tin đăng nhập.');
+    // Xử lý lỗi Brevo API
+    if (error.response) {
+      const errorBody = error.response.body || error.response.text;
+      throw new Error(`Lỗi gửi email: ${errorBody}`);
     }
-    if (error.code === 'ECONNECTION') {
-      throw new Error('Không thể kết nối đến SMTP server');
-    }
-    if (error.responseCode === 550) {
-      throw new Error('Email không tồn tại hoặc bị từ chối');
-    }
-    if (error.responseCode === 552 || error.responseCode === 450) {
-      throw new Error('Hết lượt gửi mail hoặc hộp thư đầy');
-    }
-
+    
     throw new Error(error.message || 'Lỗi gửi email');
   }
 };
