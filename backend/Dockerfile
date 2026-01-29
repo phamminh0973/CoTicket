@@ -24,7 +24,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
@@ -34,5 +34,5 @@ RUN mkdir -p uploads
 
 EXPOSE 5000
 
-# Start production server
-CMD ["npm", "run", "start"]
+# Start production server with migrations
+CMD ["sh", "-c", "npm run migrate:prod && npm run seed:prod && npm run start"]
